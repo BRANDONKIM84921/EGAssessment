@@ -1,0 +1,310 @@
+---
+title: "Intern Assessment"
+author: "Brandon Kim"
+date: "2023-05-29"
+output:
+  pdf_document: default
+  html_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE) 
+```
+
+```{r libraries}
+library(tidyverse)
+```
+
+```{r readxl}
+df <- readxl::read_excel(here::here("social_data.xlsx"))
+```
+
+### Question 1.
+
+*What is the typical engagement rate we can expect? What's the likelihood that we can achieve a 15% engagement rate?*
+
+```{r expected engagement rate}
+df %>%
+  filter(`Total Impressions` != 0, 
+         `Total Engagements` <= `Total Impressions`) %>% # Filtering out outliers
+  summarize(`expected engagement rate` = mean(`Total Engagements`/`Total Impressions`))
+```
+
+Excluding outliers, We can expect a typical engagement rate of 5.347238% across all media.
+
+```{r likelihood calculation}
+df %>%
+  filter(`Total Impressions` != 0) %>%
+  summarize(likelihood = sum(round(`Total Engagements`/`Total Impressions`, 2) == 0.15)/n())
+```
+
+The likelihood that of achieving a 15% engagement rate is 0.0106.
+
+### Question 2.
+
+*Does day of the week and time of posting affect engagement rates?*
+
+```{r data cleaning}
+df_time <- df %>%
+  separate(`Published Date`, c("date", "time"), sep = " ") %>%
+  mutate(day = weekdays(as.POSIXlt(mdy(date))),
+         hour = substr(time, 1, 2))
+```
+
+```{r day of week}
+df_time %>%
+  filter(`Total Impressions` != 0) %>% 
+  group_by(day) %>%
+  summarize(engagement_rate = mean(`Total Engagements`/`Total Impressions`),
+            engagement_rate_spread = sd(`Total Engagements`/`Total Impressions`))
+```
+
+Just from looking at the average engagement rates for each day, we can clearly see that there is more engagement on posts on Friday. However, looking at the standard deviation, we can see that the spread is really high, probably from outliers. It might be a good idea to filter out the outlying data.
+
+First, we must identify the outliers. Since it seems like Friday has an abnormally large engagement rate, we should filter out data where the amount of engagements far exceeds the amount of impressions.
+
+```{r identifying outliers}
+df_time %>% 
+  filter(`Total Engagements` > `Total Impressions`)
+```
+
+All of these posts happen on Facebook and happen on Thursday or Friday. These posts could lead to very skewed results. For instance, a total engagement value of 940 compared to a total impression value of 1 leads to an extremely high engagement rate, which leads to the mean being a bad metric for determining typical engagement rates, so we should filter these three out.
+
+```{r}
+df_time %>%
+  filter(`Total Impressions` != 0, 
+         `Total Engagements` <= `Total Impressions`) %>% # Filtering outliers
+  group_by(day) %>%
+  summarize(engagement_rate = mean(`Total Engagements`/`Total Impressions`), total = n()) %>%
+  arrange(desc(engagement_rate))
+```
+
+Just like that, the data seems as if there isn't any truly noticeable differences between each day. However, if we had to pick, Tuesdays seem like our best bet for getting a high engagement rate.
+
+We can apply the same logic for time of day. We will be using the hour as our metric for time.
+
+```{r hours}
+df_time %>%
+  filter(`Total Impressions` != 0, 
+         `Total Engagements` <= `Total Impressions`) %>% 
+  group_by(hour) %>%
+  summarize(engagement_rate = mean(`Total Engagements`/`Total Impressions`), total = n()) %>%
+  arrange(desc(engagement_rate))
+```
+
+For time, it seems as if hour 5 has the highest engagement rate by a somewhat significant margin. With it being higher than the second highest engagement rate by around 3.5 percentage points. Albeit, it wouldn't be safe to count out hours with low sample sizes, such as hour 22 and 2.
+
+### Question 3.
+
+*How are our game titles doing in terms of social performance? Is there a specific game we should focus more on or less?*
+
+```{r summary statistics for games}
+df %>% 
+  filter(Account %in% c("CSGO", "DOTA2", "Valorant"),
+         `Total Engagements` <= `Total Impressions`) %>%
+  group_by(Account) %>%
+  summarize(mean_impressions = mean(`Total Impressions`),
+            mean_engagement = mean(`Total Engagements`),
+            n = n(),
+            mean_eng_rate = mean(`Total Engagements`[`Total Impressions` != 0]/`Total Impressions`[`Total Impressions` != 0]),
+            sd_eng_rate = sd(`Total Engagements`[`Total Impressions` != 0]/`Total Impressions`[`Total Impressions` != 0]))
+```
+
+At first glance, the Valorant account seems to be doing the best when it comes to engagement rate. With the highest mean and lowest standard deviation, each of their posts seem to garner a relatively consistent proportion of interactions from impressions. However, it seems as if the Valorant account has the lowest average impressions per post, so I would recommend focusing on getting the Valorant account more impressions assuming that the sample engagement rate is representative of the population of EG Valorant fans. 
+
+The CSGO account seems to be getting the most traction when it comes to impressions, however its engagement rate is the lowest. I would recommend focusing less on getting impressions on the CSGO account's posts as it seems as the engagement from those impressions seems to be the weakest.
+
+The DOTA2 account seems to have the highest number of posts. However, despite having around a third of the amount of posts, CSGO posts seem to garner on average around 4 times more impressions than DOTA2 posts, so I would recommend the social media team to focus less on pushing out DOTA2 posts as it seems as if they are not as popular.
+
+### Question 4.
+
+*What media type performs the best?*
+
+```{r}
+df %>% 
+  group_by(`Media Type`) %>%
+  summarize(mean_impressions = mean(`Total Impressions`),
+            mean_engagement = mean(`Total Engagements`),
+            n = n(),
+            mean_eng_rate = mean(`Total Engagements`[`Total Impressions` != 0]/`Total Impressions`[`Total Impressions` != 0]),
+            sd_eng_rate = sd(`Total Engagements`[`Total Impressions` != 0]/`Total Impressions`[`Total Impressions` != 0]))
+```
+
+From the data, it seems as if the most popular forms of media are photos, links, texts and videos. Out of those four, photos seem to be the most effective in achieving a high engagement rate at a first glance. It also seems to garner the most impressions per post, and such a high engagement from those impressions. However, the standard deviation seems to be awfully high. Recalling from question 2, all of our outliers were photo posts. So a good step to take now is to remove any outliers similar to in question 2.
+
+It's also important to note that album has an NA value for the standard deviation of engagement rate because there's only 1 album post that can be calculated for engagement rate.
+
+```{r removing outliers}
+df %>% 
+  filter(`Total Engagements` <= `Total Impressions`) %>%
+  group_by(`Media Type`) %>%
+  summarize(mean_impressions = mean(`Total Impressions`),
+            mean_engagement = mean(`Total Engagements`),
+            n = n(),
+            mean_eng_rate = mean(`Total Engagements`[`Total Impressions` != 0]/`Total Impressions`[`Total Impressions` != 0]),
+            sd_eng_rate = sd(`Total Engagements`[`Total Impressions` != 0]/`Total Impressions`[`Total Impressions` != 0]))
+```
+
+Despite removing the outliers, photos still seem to be performing the best out of the four main media types. They still have the highest average impressions and the highest average engagements from those impressions. However, this is data gathered from ALL accounts, so for strategic decisions regarding EACH account, I would redo this analysis and now subgroup by each account (which I do for question #6).
+
+### Question 5.
+
+*What is our best performing campaign?*
+
+```{r summary statistics for campaigns}
+df %>%
+  filter(`Campaign Name` != "N/A") %>%
+  group_by(`Campaign Name`) %>% 
+  summarize(mean_impressions = mean(`Total Impressions`),
+            mean_engagement = mean(`Total Engagements`),
+            n = n(),
+            mean_eng_rate = mean(`Total Engagements`[`Total Impressions` != 0]/`Total Impressions`[`Total Impressions` != 0]),
+            sd_eng_rate = sd(`Total Engagements`[`Total Impressions` != 0]/`Total Impressions`[`Total Impressions` != 0]))
+```
+
+The best performing campaign is Community Engagement, as its posts gather the highest average impressions and highest average engagements. And the posts also have the highest average engagement rate.
+
+### Question 6.
+
+*Define out a posting strategy for our social channels based on your discoveries.*
+
+```{r group by account and media type}
+df %>% 
+  filter(`Media Type` %in% c("Photo", "Text", "Video", "Link"), 
+         `Total Engagements` <= `Total Impressions`) %>%
+  group_by(Account, `Media Type`) %>%
+  summarize(mean_impressions = mean(`Total Impressions`),
+            mean_engagement = mean(`Total Engagements`),
+            n = n(),
+            mean_eng_rate = mean(`Total Engagements`[`Total Impressions` != 0]/`Total Impressions`[`Total Impressions` != 0]),
+            sd_eng_rate = sd(`Total Engagements`[`Total Impressions` != 0]/`Total Impressions`[`Total Impressions` != 0]))
+```
+
+(keep in mind that the NA values come for engagement rate come from having no posts with any impressions)
+
+It's imperative to be more specific when it comes to making actual strategic decisions, so I decided to group by both account and media type first. After grouping by both account type AND media type, we get different results on which media type performs the best depending on the account. It seems as if for game titles, videos seem to generate the most impressions, engagements, and engagement rate. This would make sense as videos seem like a proper way to generate hype for upcoming esports matches.
+
+It's also important to make sure that there are no confounding sources found within time and day as well. Although this could very difficult to measure simply due to timing of certain key events. For instance, if DOTA2 matches happen more often on Friday, than obviously certain Fridays would have a higher impressions or engagements, leading to Fridays being seen as the most popular days for posting. Keep in mind that we found that there were no noticeably significant differences in day from question 2. 
+
+```{r group by account and day}
+df_time %>% 
+  filter(`Media Type` %in% c("Photo", "Text", "Video", "Link"), 
+         `Total Engagements` <= `Total Impressions`,
+         `Total Impressions` != 0) %>%
+  group_by(Account, day) %>% 
+  summarize(engagement_rate = mean(`Total Engagements`/`Total Impressions`)) %>%
+  arrange(desc(engagement_rate), .by_group = T)
+```
+
+Unlike our answer to question 2, there is significant difference in posting day when it comes to content creators. However, our conclusion of no significant difference in day still stays the same for all game titles and the general account.
+
+```{r group by account and hour}
+df_time %>% 
+  filter(`Media Type` %in% c("Photo", "Text", "Video", "Link"), 
+         `Total Engagements` <= `Total Impressions`,
+         `Total Impressions` != 0) %>%
+  group_by(Account, hour) %>% 
+  summarize(engagement_rate = mean(`Total Engagements`/`Total Impressions`)) %>%
+  arrange(desc(engagement_rate)) %>%
+  slice(1:3) # Don't want that many outputs
+```
+
+Just like our conclusion for question 2, time of day generally does seem to matter for each account. 
+
+Overall, for game titles, to garner the highest engagement rate, I would recommend posting primarily videos, with the time differing for each game title. I would recommend for CSGO, around 8 AM; for DOTA2, around 7 PM; and for Valorant, around 9 AM. As for day, I believe that it doesn't that much, but if you had to pick: Thursday for CSGO, Tuesday for DOTA2, and Friday for Valorant.
+
+For content creators, I would highly recommend posting videos on Saturdays at 12 PM to garner the highest engagement rate. As for general posts, I would recommend posting photos at 5 pm. I also believe that for the general account, day really doesn't matter. 
+
+### Question 7.
+
+*What suggestions would you give to the social media team if they want to expand their presence (e.g. if our CSGO youtube channel is doing well should we expand to TikTok)?*
+
+Let's first start with CSGO 
+
+```{r}
+df %>% 
+  filter(Account == "CSGO") %>%
+  count(`Campaign Name`)
+```
+
+```{r}
+df %>% 
+  filter(Account == "CSGO") %>%
+  count(`Account Type`)
+```
+
+CSGO only seems to be active on twitter and posts community engagement posts. A good expansion for the CSGO account is on another platform with a high engagement rate for community engagement posts. 
+
+```{r}
+df %>%
+  filter(`Campaign Name` == "Community Engagement",
+         `Total Impressions` != 0) %>%
+  group_by(`Account Type`) %>%
+  summarize(engagement_rate = mean(`Total Engagements`/`Total Impressions`))
+```
+
+Community engagement posts seem to be doing exceptionally well on Facebook and decently well on Youtube. So I would suggest the CSGO account to expand to those two platforms.
+
+We can apply the same logic to the other game titles:
+
+```{r}
+df %>% 
+  filter(Account == "Valorant") %>%
+  count(`Campaign Name`)
+```
+
+```{r}
+df %>% 
+  filter(Account == "Valorant") %>%
+  count(`Account Type`)
+```
+
+```{r}
+df %>%
+  filter(`Campaign Name` == "Evil Exhibited",
+         `Total Impressions` != 0) %>%
+  group_by(`Account Type`) %>%
+  summarize(engagement_rate = mean(`Total Engagements`/`Total Impressions`))
+```
+
+Evil exhibited posts seem to already be doing the best on Youtube. If I had to recommend one other expansion platform for Valorant I would choose TikTok, although Facebook, Linkedin, and Twitter have similar engagement rates. However, I would NOT recommend Instagram.
+
+```{r}
+df %>% 
+  filter(Account == "DOTA2") %>%
+  count(`Campaign Name`)
+```
+
+```{r}
+df %>% 
+  filter(Account == "DOTA2") %>%
+  count(`Account Type`)
+```
+
+```{r}
+df %>%
+  filter(`Campaign Name` == "N/A",
+         `Total Impressions` != 0,
+         `Total Engagements` <= `Total Impressions`) %>%
+  group_by(`Account Type`) %>%
+  summarize(engagement_rate = mean(`Total Engagements`/`Total Impressions`))
+```
+
+The DOTA2 seems to post a lot of non campaign content, however the most prevalent is Community Engagement. So, similar to CSGO I would recommend DOTA2 to expand to facebook as well. Facebook and TikTok also seem to be doing prominently well for non campaign posts, so I could also recommend TikTok as well. 
+
+Finally, we will find the best expansion for content creators.
+
+```{r}
+df %>% 
+  filter(Account == "Content Creators") %>%
+  count(`Campaign Name`)
+```
+
+```{r}
+df %>% 
+  filter(Account == "Content Creators") %>%
+  count(`Account Type`)
+```
+Content creators also seem to have a lot of non campaign posts, so similar to DOTA2, I would recommend expanding to Facebook and TikTok. 
+
