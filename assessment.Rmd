@@ -291,7 +291,7 @@ df %>%
   summarize(engagement_rate = mean(`Total Engagements`/`Total Impressions`))
 ```
 
-The DOTA2 seems to post a lot of non campaign content, however the most prevalent is Community Engagement. So, similar to CSGO I would recommend DOTA2 to expand to facebook as well. Facebook and TikTok also seem to be doing prominently well for non campaign posts, so I could also recommend TikTok as well. 
+The DOTA2 account seems to post a lot of non campaign content, however the most prevalent is Community Engagement. So, similar to CSGO I would recommend DOTA2 to expand to facebook as well. Facebook and TikTok also seem to be doing prominently well for non campaign posts, so I could also recommend TikTok as well. 
 
 Finally, we will find the best expansion for content creators.
 
@@ -306,5 +306,5 @@ df %>%
   filter(Account == "Content Creators") %>%
   count(`Account Type`)
 ```
-Content creators also seem to have a lot of non campaign posts, so similar to DOTA2, I would recommend expanding to Facebook and TikTok. 
+Content creators also seem to have a lot of non campaign posts, so similar to the DOTA2 account, I would recommend expanding to Facebook and TikTok. 
 
