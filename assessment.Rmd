@@ -31,7 +31,7 @@ df %>%
   summarize(`expected engagement rate` = mean(`Total Engagements`/`Total Impressions`))
 ```
 
-Excluding outliers, We can expect a typical engagement rate of 5.347238% across all media.
+Excluding outliers, we can expect a typical engagement rate of 5.347238% across all media.
 
 ```{r likelihood calculation}
 df %>%
@@ -60,7 +60,7 @@ df_time %>%
             engagement_rate_spread = sd(`Total Engagements`/`Total Impressions`))
 ```
 
-Just from looking at the average engagement rates for each day, we can clearly see that there is more engagement on posts on Friday. However, looking at the standard deviation, we can see that the spread is really high, probably from outliers. It might be a good idea to filter out the outlying data.
+Just from looking at the average engagement rates for each day, we can clearly see that there are more engagement on posts on Friday. However, looking at the standard deviation, we can see that the spread is really high, probably from outliers. It might be a good idea to filter out the outlying data.
 
 First, we must identify the outliers. Since it seems like Friday has an abnormally large engagement rate, we should filter out data where the amount of engagements far exceeds the amount of impressions.
 
@@ -80,7 +80,7 @@ df_time %>%
   arrange(desc(engagement_rate))
 ```
 
-Just like that, the data seems as if there isn't any truly noticeable differences between each day. However, if we had to pick, Tuesdays seem like our best bet for getting a high engagement rate.
+Just like that, the data seems to suggest that there isn't any truly noticeable differences between each day. However, if we had to pick, Tuesdays seem like our best bet for getting a high engagement rate.
 
 We can apply the same logic for time of day. We will be using the hour as our metric for time.
 
@@ -183,7 +183,7 @@ df %>%
 
 (keep in mind that the NA values come for engagement rate come from having no posts with any impressions)
 
-It's imperative to be more specific when it comes to making actual strategic decisions, so I decided to group by both account and media type first. After grouping by both account type AND media type, we get different results on which media type performs the best depending on the account. It seems as if for game titles, videos seem to generate the most impressions, engagements, and engagement rate. This would make sense as videos seem like a proper way to generate hype for upcoming esports matches.
+It's imperative to be more specific when it comes to making actual strategic decisions, so I decided to group by both account and media type first. After grouping by both account type and media type, we get different results on which media type performs the best depending on the account. It seems as if for game titles, videos seem to generate the most impressions, engagements, and engagement rate. This would make sense as videos seem like the effective way to generate hype for upcoming esports matches.
 
 It's also important to make sure that there are no confounding sources found within time and day as well. Although this could very difficult to measure simply due to timing of certain key events. For instance, if DOTA2 matches happen more often on Friday, than obviously certain Fridays would have a higher impressions or engagements, leading to Fridays being seen as the most popular days for posting. Keep in mind that we found that there were no noticeably significant differences in day from question 2. 
 
@@ -220,7 +220,7 @@ For content creators, I would highly recommend posting videos on Saturdays at 12
 
 *What suggestions would you give to the social media team if they want to expand their presence (e.g. if our CSGO youtube channel is doing well should we expand to TikTok)?*
 
-Let's first start with CSGO 
+Let's first start with the CSGO account
 
 ```{r}
 df %>% 
@@ -234,7 +234,7 @@ df %>%
   count(`Account Type`)
 ```
 
-CSGO only seems to be active on twitter and posts community engagement posts. A good expansion for the CSGO account is on another platform with a high engagement rate for community engagement posts. 
+The CSGO account only seems to be active on twitter and posts community engagement posts. A good expansion for the CSGO account is on another platform with a high engagement rate for community engagement posts. 
 
 ```{r}
 df %>%
@@ -246,7 +246,7 @@ df %>%
 
 Community engagement posts seem to be doing exceptionally well on Facebook and decently well on Youtube. So I would suggest the CSGO account to expand to those two platforms.
 
-We can apply the same logic to the other game titles:
+We can apply the same logic to the other two game titles:
 
 ```{r}
 df %>% 
@@ -268,7 +268,7 @@ df %>%
   summarize(engagement_rate = mean(`Total Engagements`/`Total Impressions`))
 ```
 
-Evil exhibited posts seem to already be doing the best on Youtube. If I had to recommend one other expansion platform for Valorant I would choose TikTok, although Facebook, Linkedin, and Twitter have similar engagement rates. However, I would NOT recommend Instagram.
+Evil exhibited posts seem to already be doing the best on Youtube. If I had to recommend one other expansion platform for the Valorant account I would choose TikTok, although Facebook, Linkedin, and Twitter have similar engagement rates. However, I would NOT recommend Instagram.
 
 ```{r}
 df %>% 
