@@ -82,7 +82,7 @@ df_time %>%
 
 Just like that, the data seems to suggest that there isn't any truly noticeable differences between each day. However, if we had to pick, Tuesdays seem like our best bet for getting a high engagement rate.
 
-We can apply the same logic for time of day. We will be using the hour as our metric for time.
+We can apply the same logic for time of day. We will be using the hour as our metric for time of day.
 
 ```{r hours}
 df_time %>%
