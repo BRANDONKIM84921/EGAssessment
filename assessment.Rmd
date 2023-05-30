@@ -39,7 +39,7 @@ df %>%
   summarize(likelihood = sum(round(`Total Engagements`/`Total Impressions`, 2) == 0.15)/n())
 ```
 
-The likelihood that of achieving a 15% engagement rate is 0.0106.
+The likelihood of achieving a 15% engagement rate is 0.0106.
 
 ### Question 2.
 
